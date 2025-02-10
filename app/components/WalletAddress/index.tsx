@@ -34,7 +34,7 @@ export default function WalletAddress() {
       if (sigResult) {
         alert("Airdrop was confirmed!");
       }
-    } catch (err) {
+    } catch (err: any) {
       alert("You are Rate limited for Airdrop");
     }
   };

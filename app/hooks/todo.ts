@@ -34,7 +34,7 @@ export function useTodo() {
 
   useEffect(() => {
     findProfileAccounts();
-  }, [publicKey, program]);
+  }, [publicKey, program]); // Added `program` to dependencies
 
   const findProfileAccounts = async () => {
     if (program && publicKey && !transactionPending) {
@@ -73,7 +73,7 @@ export function useTodo() {
     if (program && publicKey) {
       try {
         setTransactionPending(true);
-        const [profilePda, profileBump] = findProgramAddressSync(
+        const [profilePda] = findProgramAddressSync(
           [utf8.encode("USER_STATE"), publicKey.toBuffer()],
           program.programId
         );
@@ -97,115 +97,118 @@ export function useTodo() {
         setTransactionPending(false);
       }
     }
-  }, []);
+  }, [program, publicKey]); // Added missing dependencies
 
-  const addTodo = useCallback(async (content: string) => {
-    if (program && publicKey) {
-      try {
-        setTransactionPending(true);
+  const addTodo = useCallback(
+    async (content: string) => {
+      if (program && publicKey) {
+        try {
+          setTransactionPending(true);
 
-        const [profilePda] = findProgramAddressSync(
-          [utf8.encode("USER_STATE"), publicKey.toBuffer()],
-          program.programId
-        );
-        const [todoPda] = findProgramAddressSync(
-          [utf8.encode("TODO_STATE"), publicKey.toBuffer(), Uint8Array.from([lastTodo])],
-          program.programId
-        );
+          const [profilePda] = findProgramAddressSync(
+            [utf8.encode("USER_STATE"), publicKey.toBuffer()],
+            program.programId
+          );
+          const [todoPda] = findProgramAddressSync(
+            [utf8.encode("TODO_STATE"), publicKey.toBuffer(), Uint8Array.from([lastTodo])],
+            program.programId
+          );
 
-        if (!content.trim()) {
+          if (!content.trim()) {
+            setTransactionPending(false);
+            toast.error("Todo cannot be empty.");
+            return;
+          }
+
+          await program.methods
+            .addTodo(content)
+            .accounts({
+              userProfile: profilePda,
+              todoAccount: todoPda,
+              authority: publicKey,
+              systemProgram: SystemProgram.programId,
+            })
+            .rpc();
+        } catch (error: any) {
+          console.log(error);
+          toast.error(error.toString());
+          setError("Failed to add todo.");
+        } finally {
           setTransactionPending(false);
-          toast.error("Todo cannot be empty.");
-          return;
         }
-
-        return await program.methods
-          .addTodo(content)
-          .accounts({
-            userProfile: profilePda,
-            todoAccount: todoPda,
-            authority: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc();
-      } catch (error: any) {
-        console.log(error);
-        toast.error(error.toString());
-        setError("Failed to add todo.");
-      } finally {
-        setTransactionPending(false);
       }
-    }
-  }, []);
+    },
+    [program, publicKey, lastTodo]
+  ); // Added missing dependencies
 
-  const markTodo = useCallback(async (todoPda: any, todoIdx: any) => {
-    if (program && publicKey) {
-      try {
-        setTransactionPending(true);
-        const [profilePda, profileBump] = findProgramAddressSync(
-          [utf8.encode("USER_STATE"), publicKey.toBuffer()],
-          program.programId
-        );
+  const markTodo = useCallback(
+    async (todoPda: any, todoIdx: any) => {
+      if (program && publicKey) {
+        try {
+          setTransactionPending(true);
+          const [profilePda] = findProgramAddressSync(
+            [utf8.encode("USER_STATE"), publicKey.toBuffer()],
+            program.programId
+          );
 
-        await program.methods
-          .markTodo(todoIdx)
-          .accounts({
-            userProfile: profilePda,
-            todoAccount: todoPda,
-            authority: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc();
-        toast.success("Successfully marked todo.");
-        window.location.reload();
-      } catch (error: any) {
-        console.log(error);
-        toast.error(error.toString());
-        setError("Failed to mark todo.");
-      } finally {
-        setTransactionPending(false);
+          await program.methods
+            .markTodo(todoIdx)
+            .accounts({
+              userProfile: profilePda,
+              todoAccount: todoPda,
+              authority: publicKey,
+              systemProgram: SystemProgram.programId,
+            })
+            .rpc();
+          toast.success("Successfully marked todo.");
+          window.location.reload();
+        } catch (error: any) {
+          console.log(error);
+          toast.error(error.toString());
+          setError("Failed to mark todo.");
+        } finally {
+          setTransactionPending(false);
+        }
       }
-    }
-  }, []);
+    },
+    [program, publicKey]
+  ); // Added missing dependencies
 
-  const removeTodo = useCallback(async (todoPda: any, todoIdx: any) => {
-    if (program && publicKey) {
-      try {
-        setTransactionPending(true);
-        const [profilePda, profileBump] = findProgramAddressSync(
-          [utf8.encode("USER_STATE"), publicKey.toBuffer()],
-          program.programId
-        );
+  const removeTodo = useCallback(
+    async (todoPda: any, todoIdx: any) => {
+      if (program && publicKey) {
+        try {
+          setTransactionPending(true);
+          const [profilePda] = findProgramAddressSync(
+            [utf8.encode("USER_STATE"), publicKey.toBuffer()],
+            program.programId
+          );
 
-        await program.methods
-          .removeTodo(todoIdx)
-          .accounts({
-            userProfile: profilePda,
-            todoAccount: todoPda,
-            authority: publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc();
-        toast.success("Successfully removed todo.");
-        window.location.reload();
-      } catch (error: any) {
-        console.log(error);
-        toast.error(error.toString());
-        setError("Failed to remove todo.");
-      } finally {
-        setTransactionPending(false);
+          await program.methods
+            .removeTodo(todoIdx)
+            .accounts({
+              userProfile: profilePda,
+              todoAccount: todoPda,
+              authority: publicKey,
+              systemProgram: SystemProgram.programId,
+            })
+            .rpc();
+          toast.success("Successfully removed todo.");
+          window.location.reload();
+        } catch (error: any) {
+          console.log(error);
+          toast.error(error.toString());
+          setError("Failed to remove todo.");
+        } finally {
+          setTransactionPending(false);
+        }
       }
-    }
-  }, []);
+    },
+    [program, publicKey]
+  ); // Added missing dependencies
 
-  const incompleteTodos = useMemo(
-    () => todos.filter((todo: any) => !todo.account.marked),
-    [todos, lastTodo]
-  );
-  const completedTodos = useMemo(
-    () => todos.filter((todo: any) => todo.account.marked),
-    [todos, lastTodo]
-  );
+  const incompleteTodos = useMemo(() => todos.filter((todo: any) => !todo.account.marked), [todos]);
+  const completedTodos = useMemo(() => todos.filter((todo: any) => todo.account.marked), [todos]);
 
   return {
     initialized,
