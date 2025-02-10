@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { TODO_PROGRAM_PUBKEY } from "../constants";
 import { IDL as profileIdl } from "../contract/todo";
 import toast from "react-hot-toast";
@@ -31,6 +31,10 @@ export function useTodo() {
       return new anchor.Program(profileIdl, TODO_PROGRAM_PUBKEY, provider);
     }
   }, [connection, anchorWallet]);
+
+  useEffect(() => {
+    findProfileAccounts();
+  }, [publicKey, program]);
 
   const findProfileAccounts = async () => {
     if (program && publicKey && !transactionPending) {
@@ -65,11 +69,7 @@ export function useTodo() {
     }
   };
 
-  useEffect(() => {
-    findProfileAccounts();
-  }, [publicKey, program, lastTodo]);
-
-  const initializeUser = async () => {
+  const initializeUser = useCallback(async () => {
     if (program && publicKey) {
       try {
         setTransactionPending(true);
@@ -87,9 +87,8 @@ export function useTodo() {
           })
           .rpc();
         setInitialized(true);
-        await findProfileAccounts();
         toast.success("Successfully initialized user.");
-        // window.location.reload();
+        window.location.reload();
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
@@ -98,17 +97,18 @@ export function useTodo() {
         setTransactionPending(false);
       }
     }
-  };
+  }, []);
 
-  const addTodo = async (content: string) => {
+  const addTodo = useCallback(async (content: string) => {
     if (program && publicKey) {
       try {
         setTransactionPending(true);
-        const [profilePda, profileBump] = findProgramAddressSync(
+
+        const [profilePda] = findProgramAddressSync(
           [utf8.encode("USER_STATE"), publicKey.toBuffer()],
           program.programId
         );
-        const [todoPda, todoBump] = findProgramAddressSync(
+        const [todoPda] = findProgramAddressSync(
           [utf8.encode("TODO_STATE"), publicKey.toBuffer(), Uint8Array.from([lastTodo])],
           program.programId
         );
@@ -119,7 +119,7 @@ export function useTodo() {
           return;
         }
 
-        await program.methods
+        return await program.methods
           .addTodo(content)
           .accounts({
             userProfile: profilePda,
@@ -128,10 +128,6 @@ export function useTodo() {
             systemProgram: SystemProgram.programId,
           })
           .rpc();
-
-        toast.success("Successfully added todo.");
-
-        await findProfileAccounts();
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
@@ -140,13 +136,12 @@ export function useTodo() {
         setTransactionPending(false);
       }
     }
-  };
+  }, []);
 
-  const markTodo = async (todoPda: any, todoIdx: any) => {
+  const markTodo = useCallback(async (todoPda: any, todoIdx: any) => {
     if (program && publicKey) {
       try {
         setTransactionPending(true);
-        setLoading(true);
         const [profilePda, profileBump] = findProgramAddressSync(
           [utf8.encode("USER_STATE"), publicKey.toBuffer()],
           program.programId
@@ -162,22 +157,21 @@ export function useTodo() {
           })
           .rpc();
         toast.success("Successfully marked todo.");
+        window.location.reload();
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
         setError("Failed to mark todo.");
       } finally {
-        setLoading(false);
         setTransactionPending(false);
       }
     }
-  };
+  }, []);
 
-  const removeTodo = async (todoPda: any, todoIdx: any) => {
+  const removeTodo = useCallback(async (todoPda: any, todoIdx: any) => {
     if (program && publicKey) {
       try {
         setTransactionPending(true);
-        setLoading(true);
         const [profilePda, profileBump] = findProgramAddressSync(
           [utf8.encode("USER_STATE"), publicKey.toBuffer()],
           program.programId
@@ -193,19 +187,25 @@ export function useTodo() {
           })
           .rpc();
         toast.success("Successfully removed todo.");
+        window.location.reload();
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
         setError("Failed to remove todo.");
       } finally {
-        setLoading(false);
         setTransactionPending(false);
       }
     }
-  };
+  }, []);
 
-  const incompleteTodos = useMemo(() => todos.filter((todo: any) => !todo.account.marked), [todos]);
-  const completedTodos = useMemo(() => todos.filter((todo: any) => todo.account.marked), [todos]);
+  const incompleteTodos = useMemo(
+    () => todos.filter((todo: any) => !todo.account.marked),
+    [todos, lastTodo]
+  );
+  const completedTodos = useMemo(
+    () => todos.filter((todo: any) => todo.account.marked),
+    [todos, lastTodo]
+  );
 
   return {
     initialized,

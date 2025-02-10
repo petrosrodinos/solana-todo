@@ -13,6 +13,7 @@ const Create = () => {
   const handleAddTodo = async () => {
     if (input.trim()) {
       await addTodo(input);
+      window.location.reload();
       setInput("");
     } else {
       toast.error("Todo cannot be empty.");

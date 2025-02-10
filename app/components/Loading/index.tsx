@@ -1,6 +1,6 @@
 import { FC } from "react";
 
-const Loading: FC<any> = ({ loading, children }) => {
+const Loading: FC<any> = ({ loading = false, children = null }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center">
