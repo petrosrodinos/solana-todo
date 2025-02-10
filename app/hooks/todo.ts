@@ -16,8 +16,9 @@ export function useTodo() {
 
   const [initialized, setInitialized] = useState(false);
   const [lastTodo, setLastTodo] = useState(0);
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
   const [transactionPending, setTransactionPending] = useState(false);
 
   const program = useMemo(() => {
@@ -31,40 +32,42 @@ export function useTodo() {
     }
   }, [connection, anchorWallet]);
 
-  useEffect(() => {
-    const findProfileAccounts = async () => {
-      if (program && publicKey && !transactionPending) {
-        try {
-          setLoading(true);
-          const [profilePda, profileBump] = await findProgramAddressSync(
-            [utf8.encode("USER_STATE"), publicKey.toBuffer()],
-            program.programId
-          );
-          const profileAccount: any = await program.account.userProfile.fetch(profilePda);
+  const findProfileAccounts = async () => {
+    if (program && publicKey && !transactionPending) {
+      try {
+        setLoading(true);
+        const [profilePda] = findProgramAddressSync(
+          [utf8.encode("USER_STATE"), publicKey.toBuffer()],
+          program.programId
+        );
+        const profileAccount: any = await program.account.userProfile.fetch(profilePda);
 
-          if (profileAccount) {
-            setLastTodo(profileAccount.lastTodo);
-            setInitialized(true);
+        if (profileAccount) {
+          setLastTodo(profileAccount.lastTodo);
+          setInitialized(true);
 
-            const todoAccounts: any = await program.account.todoAccount.all([
-              authorFilter(publicKey.toString()),
-            ]);
-            setTodos(todoAccounts);
-          } else {
-            setInitialized(false);
-          }
-        } catch (error) {
-          console.log(error);
+          const todoAccounts: any = await program.account.todoAccount.all([
+            authorFilter(publicKey.toString()),
+          ]);
+
+          setTodos([...todoAccounts]);
+        } else {
           setInitialized(false);
-          setTodos([]);
-        } finally {
-          setLoading(false);
         }
+      } catch (error: any) {
+        console.log(error);
+        setInitialized(false);
+        setTodos([]);
+        setError("Failed to fetch profile accounts.");
+      } finally {
+        setLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     findProfileAccounts();
-  }, [publicKey, program, transactionPending]);
+  }, [publicKey, program, lastTodo]);
 
   const initializeUser = async () => {
     if (program && publicKey) {
@@ -84,10 +87,13 @@ export function useTodo() {
           })
           .rpc();
         setInitialized(true);
+        await findProfileAccounts();
         toast.success("Successfully initialized user.");
+        // window.location.reload();
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
+        setError("Failed to initialize user.");
       } finally {
         setTransactionPending(false);
       }
@@ -107,9 +113,9 @@ export function useTodo() {
           program.programId
         );
 
-        // const content = prompt("Please input todo content");
-        if (!content) {
+        if (!content.trim()) {
           setTransactionPending(false);
+          toast.error("Todo cannot be empty.");
           return;
         }
 
@@ -122,10 +128,14 @@ export function useTodo() {
             systemProgram: SystemProgram.programId,
           })
           .rpc();
+
         toast.success("Successfully added todo.");
+
+        await findProfileAccounts();
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
+        setError("Failed to add todo.");
       } finally {
         setTransactionPending(false);
       }
@@ -154,7 +164,8 @@ export function useTodo() {
         toast.success("Successfully marked todo.");
       } catch (error: any) {
         console.log(error);
-        toast.success(error.toString());
+        toast.error(error.toString());
+        setError("Failed to mark todo.");
       } finally {
         setLoading(false);
         setTransactionPending(false);
@@ -185,6 +196,7 @@ export function useTodo() {
       } catch (error: any) {
         console.log(error);
         toast.error(error.toString());
+        setError("Failed to remove todo.");
       } finally {
         setLoading(false);
         setTransactionPending(false);
@@ -205,5 +217,6 @@ export function useTodo() {
     addTodo,
     markTodo,
     removeTodo,
+    error,
   };
 }

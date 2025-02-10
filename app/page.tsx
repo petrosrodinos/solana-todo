@@ -1,4 +1,5 @@
 "use client";
+import { Toaster } from "react-hot-toast";
 import Header from "./components/Header";
 import Loading from "./components/Loading";
 import Create from "./components/Todo/Create";
@@ -16,10 +17,16 @@ export default function Home() {
 
       <div className="w-full max-w-xl mt-6">
         <Loading loading={loading}>
-          <TodoSection title="Tasks" todos={incompleteTodos} action={markTodo} />
-          <TodoSection title="Completed" todos={completedTodos} action={removeTodo} />
+          <TodoSection
+            title="Tasks"
+            todos={incompleteTodos}
+            onRemove={removeTodo}
+            onMark={markTodo}
+          />
+          <TodoSection title="Completed" todos={completedTodos} onRemove={removeTodo} />
         </Loading>
       </div>
+      <Toaster />
     </div>
   );
 }

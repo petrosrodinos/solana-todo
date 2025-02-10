@@ -1,14 +1,14 @@
 import { CalendarIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { FC } from "react";
 
-const TodoItem: FC<any> = ({ idx, content, marked, dateline, publicKey, action }) => {
+const TodoItem: FC<any> = ({ idx, content, marked, dateline, publicKey, onRemove, onMark }) => {
   const handleMarkTodo = () => {
     if (marked) return;
-    action(publicKey, idx);
+    onMark(publicKey, idx);
   };
 
   const handleRemoveTodo = () => {
-    action(publicKey, idx);
+    onRemove(publicKey, idx);
   };
 
   return (

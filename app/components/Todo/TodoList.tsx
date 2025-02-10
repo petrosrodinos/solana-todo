@@ -1,7 +1,7 @@
 import { FC } from "react";
 import TodoItem from "./TodoItem";
 
-const TodoList: FC<any> = ({ todos, action }) => {
+const TodoList: FC<any> = ({ todos, onRemove, onMark }) => {
   return (
     <ul className="space-y-4">
       {todos.map((todo: any) => (
@@ -9,7 +9,8 @@ const TodoList: FC<any> = ({ todos, action }) => {
           key={todo.account.idx}
           {...todo.account}
           publicKey={todo.publicKey}
-          action={action}
+          onRemove={onRemove}
+          onMark={onMark}
         />
       ))}
     </ul>
