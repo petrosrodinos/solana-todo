@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js & Solana Smart Contract Setup
 
-## Getting Started
+## Client
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js (>= 16)
+- Yarn or npm
+
+### Install dependencies
+
+```sh
+cd solana-todo
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Run the development server
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Build for production
 
-## Learn More
+```sh
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Solana Smart Contract (Anchor)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Prerequisites
 
-## Deploy on Vercel
+- Rust & Cargo
+- Solana CLI
+- Anchor CLI
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Install dependencies
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+cd anchor  # Navigate to the Anchor project directory
+anchor build
+```
+
+### Deploy to a local validator
+
+```sh
+solana-test-validator &  # Start a local validator
+anchor deploy
+```
+
+### Deploy to a Solana devnet
+
+```sh
+change cluster in ./Anchor.toml to 'Devnet'
+anchor build
+anchor deploy
+```
+
+### Run tests
+
+```sh
+anchor test
+```
+
+---
+
+Now you're ready to develop and deploy your Next.js frontend alongside your Solana smart contract!
