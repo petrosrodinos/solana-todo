@@ -1,12 +1,9 @@
 import { CalendarIcon, TrashIcon } from "@heroicons/react/16/solid";
-import styles from "../../styles/Todo.module.css";
 import { FC } from "react";
 
 const TodoItem: FC<any> = ({ idx, content, marked, dateline, publicKey, action }) => {
   const handleMarkTodo = () => {
-    // Only allow unchecked todo to be marked
     if (marked) return;
-
     action(publicKey, idx);
   };
 
@@ -15,23 +12,27 @@ const TodoItem: FC<any> = ({ idx, content, marked, dateline, publicKey, action }
   };
 
   return (
-    <li key={idx} className={styles.todoItem}>
+    <li className="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow-sm">
       <div
         onClick={handleMarkTodo}
-        className={`${styles.todoCheckbox} ${marked && styles.checked}`}
+        className={`w-6 h-6 border-2 rounded-full cursor-pointer transition ${
+          marked ? "bg-green-500 border-green-500" : "border-gray-400"
+        }`}
       />
-      <div>
-        <span className="todoText">{content}</span>
+      <div className="flex-1 ml-4">
+        <span className={`text-lg ${marked ? "line-through text-gray-500" : "text-gray-800"}`}>
+          {content}
+        </span>
         {dateline && (
-          <div className={styles.todoDateline}>
-            <CalendarIcon className={styles.calendarIcon} />
+          <div className="flex items-center text-sm text-gray-600 mt-1">
+            <CalendarIcon className="w-4 h-4 mr-1" />
             <span>{dateline}</span>
           </div>
         )}
       </div>
-      <div className={styles.iconContainer}>
-        <TrashIcon onClick={handleRemoveTodo} className={styles.trashIcon} />
-      </div>
+      <button onClick={handleRemoveTodo} className="text-red-500 hover:text-red-700 transition">
+        <TrashIcon className="w-5 h-5" />
+      </button>
     </li>
   );
 };

@@ -1,10 +1,9 @@
-import styles from "../../styles/Todo.module.css";
-import TodoItem from "./TodoItem";
 import { FC } from "react";
+import TodoItem from "./TodoItem";
 
 const TodoList: FC<any> = ({ todos, action }) => {
   return (
-    <ul className={styles.todoList}>
+    <ul className="space-y-4">
       {todos.map((todo: any) => (
         <TodoItem
           key={todo.account.idx}
